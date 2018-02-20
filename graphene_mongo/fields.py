@@ -65,8 +65,14 @@ class MongoengineConnectionField(ConnectionField):
 
     @property
     def default_filter_args(self):
+        def _lambda(r,kv):
+            try:
+                return r.update({kv[0]: kv[1]._type._of_type()}) or r if hasattr(kv[1], '_type') else r
+            except TypeError as err:
+                return r
+
         return reduce(
-            lambda r, kv: r.update({kv[0]: kv[1]._type._of_type()}) or r if hasattr(kv[1], '_type') else r,
+            lambda r, kv:_lambda(r,kv) ,
             self.fields.items(),
             {}
         )
